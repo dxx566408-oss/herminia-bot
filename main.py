@@ -125,9 +125,21 @@ async def on_ready():
     print(f"✅ البوت شغال باسم: {bot.user}")
     print(f"🔗 لوحة التحكم: http://127.0.0.1:5000")
 
+# --- نهاية الكود الخاص بك (استبدل الجزء الأخير بهذا) ---
+
 def run_flask():
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    # هنا الطكامة: غيرنا الآي بي لـ 0.0.0.0 والمنفذ ليقرأ من الاستضافة
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
 
 if __name__ == "__main__":
-    Thread(target=run_flask, daemon=True).start()
-    bot.run(os.getenv('DISCORD_TOKEN'))
+    # تشغيل Flask في خيط منفصل
+    t = Thread(target=run_flask)
+    t.start()
+    
+    # تشغيل البوت
+    token = os.getenv('DISCORD_TOKEN')
+    if token:
+        bot.run(token)
+    else:
+        print("❌ خطأ: لم يتم العثور على DISCORD_TOKEN في الإعدادات!")
