@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Herminia Dashboard | Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --main: #5865f2; --bg: #36393f; --sidebar: #202225; --card: #2f3136; --text: #dcddde; --green: #2ecc71; --red: #ed4245; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; }
+        .sidebar { width: 260px; background: var(--sidebar); display: flex; flex-direction: column; border-left: 1px solid #202225; }
+        .sidebar-header { padding: 20px; font-weight: bold; color: white; border-bottom: 1px solid #202225; }
+        .nav-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #8e9297; }
+        .nav-item.active { background: #393c43; color: white; border-right: 4px solid var(--main); }
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .card { background: var(--card); border-radius: 8px; padding: 20px; margin-bottom: 20px; position: relative; border: 1px solid #202225; }
+        input, textarea { width: 100%; background: #202225; border: 1px solid #111; padding: 12px; color: white; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+        .reply-container { position: relative; }
+        .add-media-btn { position: absolute; left: 10px; bottom: 10px; background: #4f545c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .drop-btn { background: #202225; padding: 12px; width: 100%; text-align: right; border: 1px solid #111; border-radius: 5px; cursor: pointer; margin-top: 10px; display: flex; justify-content: space-between; color: #3498db; font-weight: bold; }
+        .drop-body { display: none; padding: 15px; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #111; border-radius: 5px; margin-top: 2px; }
+        .btn-blue { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-green { background: var(--green); color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; opacity: 0.5; pointer-events: none; width: 100%; font-size: 16px; font-weight: bold; }
+        .btn-green.active { opacity: 1; pointer-events: all; }
+        .save-footer { display: none; margin-top: 20px; }
+        .media-preview { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px dashed var(--main); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">Herminia Kingdom</div>
+    <div class="nav-item">الأوامر العامة</div><div class="nav-item">أوامر الإشراف</div>
+    <div class="nav-item active">الردود التلقائية</div><div class="nav-item">التراحب والمغادرة</div>
+    <div class="nav-item">السجلات</div><div class="nav-item">الأذكار</div>
+</div>
+
+<div class="main-content">
+    <div id="list-view">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2>الردود التلقائية</h2>
+            <button class="btn-blue" onclick="openEditor()">+ إنشاء رد</button>
+        </div>
+        <div id="saved-items"></div>
+    </div>
+
+    <div id="editor-view" style="display:none;">
+        <div class="card"><label>الرسالة</label><input type="text" id="keyword" oninput="validate()" placeholder="مثال: سلام"></div>
+        <div id="alternatives"></div>
+        <button class="btn-blue" onclick="addAlt(true)" style="background:#4f545c;">+ إضافة رد بديل</button>
+        <div class="save-footer" id="save-footer"><button class="btn-green" id="save-btn" onclick="saveAll()">حفظ التغييرات</button></div>
+    </div>
+</div>
+
+<script>
+let guild = { channels: [], roles: [] };
+let allResponses = {};
+
+async function init() {
+    const r = await fetch('/get_server_info'); guild = await r.json();
+    const resp = await fetch('/get_all_responses'); allResponses = await resp.json();
+    renderList();
+}
+
+function renderList() {
+    const container = document.getElementById('saved-items');
+    container.innerHTML = "";
+    for (let key in allResponses) {
+        container.innerHTML += `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; border-right:4px solid var(--main);">
+            <div><b>${key}</b><br><small style="color:#8e9297;">${allResponses[key][0].reply || 'ملف مرفق'}</small></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-blue" style="background:#4f545c" onclick="editItem('${key}')">تعديل</button>
+                <button class="btn-blue" style="background:var(--red)" onclick="deleteItem('${key}')">حذف</button>
+            </div>
+        </div>`;
+    }
+}
+
+function openEditor() {
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('editor-view').style.display = 'block';
+    document.getElementById('keyword').value = "";
+    document.getElementById('alternatives').innerHTML = "";
+    addAlt(false);
+}
+
+function addAlt(canDelete, data = null) {
+    const id = Date.now();
+    const del = canDelete ? `<span style="color:var(--red); cursor:pointer; float:left;" onclick="this.parentElement.remove(); validate();">حذف الرد</span>` : '';
+    const html = `
+        <div class="card alt-card" id="card-${id}">
+            ${del} <label>الرد النصي</label>
+            <div class="reply-container">
+                <textarea class="reply-txt" oninput="validate()">${data ? data.reply : ''}</textarea>
+                <button class="add-media-btn" onclick="this.nextElementSibling.click()"><i class="fas fa-plus"></i></button>
+                <input type="file" style="display:none" onchange="upload(this)">
+                <input type="hidden" class="media-val" value="${data ? data.media : ''}">
+            </div>
+            <div class="preview">${data && data.media ? `<div class="media-preview">📁 ملف مرفق <i class="fas fa-times" style="color:var(--red); cursor:pointer" onclick="removeMedia(this)"></i></div>` : ''}</div>
+            
+            <div class="drop-btn" onclick="toggle(this)">الرومات المفعلة/المعطلة ▽</div>
+            <div class="drop-body">${guild.channels.map(c=>`<div><input type="checkbox" class="ch" value="${c.id}" ${data && data.allowed_rooms.includes(c.id) || !data ? 'checked' : ''}> ${c.name}</div>`).join('')}</div>
+            
+            <div class="drop-btn" onclick="toggle(this)">الرتب المفعلة/المعطلة ▽</div>
+            <div class="drop-body">${guild.roles.map(r=>`<div><input type="checkbox" class="ro" value="${r.id}" ${data && data.allowed_roles.includes(r.id) || !data ? 'checked' : ''}> ${r.name}</div>`).join('')}</div>
+            
+            <div style="display:flex; gap:15px; margin-top:15px;">
+                <label><input type="checkbox" class="s" ${data && data.all_search ? 'checked' : ''}> البحث الكامل</label>
+                <label><input type="checkbox" class="r" ${data && data.as_reply ? 'checked' : ''}> إرسال كرد</label>
+                <label><input type="checkbox" class="p" ${data && data.in_private ? 'checked' : ''}> إرسال في الخاص</label>
+            </div>
+        </div>`;
+    document.getElementById('alternatives').insertAdjacentHTML('beforeend', html);
+    validate();
+}
+
+async function upload(i) {
+    const f = new FormData(); f.append('file', i.files[0]);
+    const r = await fetch('/upload_media', {method:'POST', body:f});
+    const d = await r.json(); 
+    const card = i.closest('.alt-card');
+    card.querySelector('.media-val').value = d.url;
+    card.querySelector('.preview').innerHTML = `<div class="media-preview">📁 ملف مرفق <i class="fas fa-times" style="color:var(--red); cursor:pointer" onclick="removeMedia(this)"></i></div>`;
+    validate();
+}
+
+function removeMedia(el) {
+    const card = el.closest('.alt-card');
+    card.querySelector('.media-val').value = ""; // تفريغ القيمة المخفية
+    card.querySelector('.preview').innerHTML = ""; // حذف الواجهة
+    validate();
+}
+
+function validate() {
+    const k = document.getElementById('keyword').value; let ok = k.trim() !== "";
+    document.querySelectorAll('.alt-card').forEach(c => { if(!c.querySelector('.reply-txt').value && !c.querySelector('.media-val').value) ok = false; });
+    document.getElementById('save-footer').style.display = 'block';
+    document.getElementById('save-btn').className = ok ? 'btn-green active' : 'btn-green';
+}
+
+function editItem(key) {
+    openEditor();
+    document.getElementById('keyword').value = key;
+    document.getElementById('alternatives').innerHTML = "";
+    allResponses[key].forEach((item, index) => addAlt(index > 0, item));
+}
+
+async function deleteItem(key) {
+    if(!confirm("حذف؟")) return;
+    await fetch('/delete_reply', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({word:key})});
+    delete allResponses[key]; renderList();
+}
+
+function toggle(btn) { const b = btn.nextElementSibling; b.style.display = b.style.display === 'grid' ? 'none' : 'grid'; }
+
+async function saveAll() {
+    const k = document.getElementById('keyword').value; let list = [];
+    document.querySelectorAll('.alt-card').forEach(c => {
+        list.push({
+            reply: c.querySelector('.reply-txt').value, media: c.querySelector('.media-val').value,
+            allowed_rooms: Array.from(c.querySelectorAll('.ch:checked')).map(x=>x.value),
+            allowed_roles: Array.from(c.querySelectorAll('.ro:checked')).map(x=>x.value),
+            all_search: c.querySelector('.s').checked, as_reply: c.querySelector('.r').checked, in_private: c.querySelector('.p').checked
+        });
+    });
+    await fetch('/save_reply', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({word:k, replies_list:list})});
+    allResponses[k] = list; renderList();
+    document.getElementById('editor-view').style.display = 'none';
+    document.getElementById('list-view').style.display = 'block';
+}
+window.onload = init;
+</script>
+</body>
+</html>
