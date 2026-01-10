@@ -12,7 +12,8 @@ def home():
     return render_template('index.html')
 
 def run():
-    app.run(host='0.0.0.0', port=8080)
+    # غيرنا الرقم لـ 5000 ليتطابق مع ما يبحث عنه Render
+    app.run(host='0.0.0.0', port=5000)
 
 def keep_alive():
     t = threading.Thread(target=run)
@@ -29,5 +30,6 @@ async def on_ready():
 keep_alive()
 token = os.environ.get("DISCORD_TOKEN")
 bot.run(token)
+
 
 
