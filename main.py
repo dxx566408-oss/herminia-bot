@@ -5,7 +5,8 @@ from flask import Flask, redirect, url_for, session, render_template, request
 app = Flask(__name__)
 app.secret_key = "any_secret_key" 
 
-CLIENT_ID = "1326462947265843241"
+# توحيد الـ ID الجديد في كل مكان
+CLIENT_ID = "1458119547335999521"
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 REDIRECT_URI = "https://herminia-bot.onrender.com/callback"
 
@@ -16,15 +17,12 @@ def home():
         response = requests.get("https://discord.com/api/users/@me/guilds", headers=headers)
         user_guilds = response.json()
         
-        # إضافة فحص للتأكد أن ديسكورد أرسل قائمة وليس رسالة خطأ
         if isinstance(user_guilds, list):
-            # تصفية السيرفرات (صلاحية مدير 0x20)
             manageable_guilds = [g for g in user_guilds if (int(g.get('permissions', 0)) & 0x20) == 0x20]
             return render_template('index.html', guilds=manageable_guilds, logged_in=True)
         else:
-            # إذا حدث خطأ في التوكن، نمسح الجلسة ونطلب تسجيل دخول جديد
             session.pop('token', None)
-            return render_template('index.html', logged_in=False, error="انتهت الجلسة، يرجى المحاولة مرة أخرى")
+            return render_template('index.html', logged_in=False, error="انتهت الجلسة، حاول مجدداً")
     
     return render_template('index.html', logged_in=False)
 
@@ -53,7 +51,6 @@ def callback():
         session['token'] = token_data.get('access_token')
         return redirect(url_for('home'))
     else:
-        # طباعة الخطأ في سجلات Render لمعرفة السبب
         print(f"Discord Error: {token_data}")
         return f"خطأ في الاتصال بديسكورد: {token_data.get('error_description', 'Unknown error')}"
 
