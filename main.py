@@ -8,19 +8,15 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    # هنا نجلب قائمة السيرفرات التي دخلها البوت
-    # سنرسل الأسماء والأيقونات
-    guilds = []
-    for guild in bot.guilds:
-        guild_info = {
-            "name": guild.name,
-            "id": guild.id,
-            "icon": str(guild.icon.url) if guild.icon else "https://cdn.discordapp.com/embed/avatars/0.png"
-        }
-        guilds.append(guild_info)
-    
-    # نرسل القائمة لملف الـ HTML
-    return render_template('index.html', guilds=guilds)
+    # جمع بيانات السيرفرات التي يتواجد فيها البوت
+    guilds_data = []
+    if bot.is_ready():
+        for guild in bot.guilds:
+            guilds_data.append({
+                "name": guild.name,
+                "icon": str(guild.icon.url) if guild.icon else "https://cdn.discordapp.com/embed/avatars/0.png"
+            })
+    return render_template('index.html', guilds=guilds_data)
 
 def run():
     port = int(os.environ.get("PORT", 5000))
@@ -31,12 +27,12 @@ def keep_alive():
     t.start()
 
 intents = discord.Intents.default()
-intents.guilds = True  # مهم جداً لرؤية السيرفرات
+intents.guilds = True 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f'✅ {bot.user} Dashboard Live!')
+    print(f'✅ {bot.user} Dashboard is Ready!')
 
 if __name__ == "__main__":
     keep_alive()
