@@ -24,7 +24,7 @@ def run_flask():
 # --- دالة تشغيل المجالات (Cogs) ---
 async def load_extensions():
     # هنا نضيف اسم أي ملف جديد ننشئه (بدون .py)
-    extensions = ['destruction'] 
+    extensions = ['destruction', 'general'] 
     for ext in extensions:
         try:
             await bot.load_extension(ext)
