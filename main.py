@@ -3,9 +3,9 @@ import requests
 from flask import Flask, redirect, url_for, session, render_template, request
 
 app = Flask(__name__)
-app.secret_key = "any_secret_key" 
+app.secret_key = "herminia_secure_key" 
 
-# توحيد الـ ID الجديد في كل مكان
+# استخدمنا الرقم الجديد الذي أرسلته أنت
 CLIENT_ID = "1458119547335999521"
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 REDIRECT_URI = "https://herminia-bot.onrender.com/callback"
@@ -18,11 +18,12 @@ def home():
         user_guilds = response.json()
         
         if isinstance(user_guilds, list):
+            # تصفية السيرفرات (مدير 0x20)
             manageable_guilds = [g for g in user_guilds if (int(g.get('permissions', 0)) & 0x20) == 0x20]
             return render_template('index.html', guilds=manageable_guilds, logged_in=True)
         else:
             session.pop('token', None)
-            return render_template('index.html', logged_in=False, error="انتهت الجلسة، حاول مجدداً")
+            return render_template('index.html', logged_in=False, error="خطأ في الجلسة")
     
     return render_template('index.html', logged_in=False)
 
@@ -40,8 +41,7 @@ def callback():
         'client_secret': CLIENT_SECRET,
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': REDIRECT_URI,
-        'scope': 'identify guilds'
+        'redirect_uri': REDIRECT_URI
     }
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     response = requests.post("https://discord.com/api/oauth2/token", data=data, headers=headers)
@@ -51,8 +51,7 @@ def callback():
         session['token'] = token_data.get('access_token')
         return redirect(url_for('home'))
     else:
-        print(f"Discord Error: {token_data}")
-        return f"خطأ في الاتصال بديسكورد: {token_data.get('error_description', 'Unknown error')}"
+        return f"خطأ من ديسكورد: {token_data.get('error_description', 'Check Secret in Render')}"
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
