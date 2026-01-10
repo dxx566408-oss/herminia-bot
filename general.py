@@ -1,28 +1,22 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
-
-class General(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    # أمر الأفاتار (عرض صورة الحساب)
-    @app_commands.command(name="avatar", description="عرض صورة الحساب الخاصة بك أو لشخص آخر")
+@app_commands.command(name="avatar", description="عرض صورة الحساب الخاصة بك أو لشخص آخر")
     @app_commands.describe(user="اختر الشخص الذي تريد رؤية صورته")
     async def avatar(self, interaction: discord.Interaction, user: discord.Member = None):
-        # إذا لم يختر الشخص مستخدم، تظهر صورته هو
+        # الشخص المراد عرض صورته
         target = user or interaction.user
         
+        # إنشاء البطاقة
         embed = discord.Embed(
-            title=f"🖼️ صورة {target.display_name}",
-            color=discord.Color.random() # يختار لون عشوائي في كل مرة
+            title=f"🖼️ صورة: {target.display_name}",
+            color=discord.Color.blue()
         )
         
-        # عرض الصورة بجودتها الكاملة
+        # وضع الصورة الكبيرة
         embed.set_image(url=target.display_avatar.url)
         
-        # زر لتحميل الصورة (اختياري)
+        # إضافة اسم الشخص الذي طلب الأمر في الأسفل بخط صغير
+        embed.set_footer(
+            text=f"طلب بواسطة: {interaction.user.display_name}", 
+            icon_url=interaction.user.display_avatar.url
+        )
+        
         await interaction.response.send_message(embed=embed)
-
-async def setup(bot):
-    await bot.add_cog(General(bot))
