@@ -2,17 +2,23 @@
     {% if not logged_in %}
         <h1>مرحباً بك في Herminia</h1>
         <p>يجب عليك تسجيل الدخول لرؤية سيرفراتك</p>
-        <a href="https://discord.com/api/oauth2/authorize?client_id=1326462947265843241&redirect_uri=https%3A%2F%2Fherminia-bot.onrender.com%2Fcallback&response_type=code&scope=identify+guilds">
-   🔑 تسجيل الدخول لرؤية سيرفراتك
-</a>
+        <a href="https://discord.com/api/oauth2/authorize?client_id=1458119547335999521&redirect_uri=https%3A%2F%2Fherminia-bot.onrender.com%2Fcallback&response_type=code&scope=identify+guilds" class="login-btn">
+           🔑 تسجيل الدخول عبر ديسكورد
+        </a>
     {% else %}
         <h2>اختر سيرفراً لإضافة البوت</h2>
-        <div class="guilds-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="guilds-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
             {% for guild in guilds %}
-            <div class="guild-card">
-                <img src="https://cdn.discordapp.com/icons/{{guild.id}}/{{guild.icon}}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                <p>{{ guild.name }}</p>
-                <a href="https://discord.com/api/oauth2/authorize?client_id=1326462947265843241&permissions=8&scope=bot%20applications.commands&guild_id={{guild.id}}" class="invite-btn" style="padding: 5px 10px; font-size: 14px;">إضافة البوت</a>
+            <div class="guild-card" style="border: 1px solid #ccc; padding: 15px; border-radius: 10px; text-align: center;">
+                {% if guild.icon %}
+                    <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png" alt="{{ guild.name }}" style="width: 80px; border-radius: 50%;">
+                {% else %}
+                    <div style="width: 80px; height: 80px; background: #7289da; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        {{ guild.name[0] }}
+                    </div>
+                {% endif %}
+                <p><strong>{{ guild.name }}</strong></p>
+                <a href="https://discord.com/api/oauth2/authorize?client_id=1458119547335999521&permissions=8&scope=bot%20applications.commands&guild_id={{guild.id}}" class="invite-btn" style="background: #23a559; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; display: inline-block;">إضافة البوت</a>
             </div>
             {% endfor %}
         </div>
