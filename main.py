@@ -8,11 +8,10 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    # سيبحث الفلاسك تلقائياً عن ملف index.html داخل مجلد templates
+    # هذا السطر هو اللي بيخلي الموقع يفتح ملف index.html اللي سويناه
     return render_template('index.html')
 
 def run():
-    # بورت 8080 هو الأنسب لخدمات Render
     app.run(host='0.0.0.0', port=8080)
 
 def keep_alive():
@@ -24,7 +23,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f'✅ {bot.user} Online and Web UI Ready!')
+    print(f'✅ {bot.user} Online and Dashboard Ready!')
     await bot.tree.sync()
 
 keep_alive()
