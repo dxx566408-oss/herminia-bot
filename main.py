@@ -34,6 +34,7 @@ async def load_extensions():
 
 @bot.event
 async def on_ready():
+    await bot.tree.sync()
     print(f"🚀 العقل المركزي جاهز.. البوت متصل باسم: {bot.user}")
 
 # --- تشغيل البوت ---
@@ -45,3 +46,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
