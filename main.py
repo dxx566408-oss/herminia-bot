@@ -50,3 +50,4 @@ async def on_ready():
 if __name__ == "__main__":
     Thread(target=run_flask).start()
     bot.run(os.getenv('DISCORD_TOKEN'))
+
