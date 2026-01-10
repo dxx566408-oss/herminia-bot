@@ -5,7 +5,6 @@ import asyncio
 from flask import Flask
 from threading import Thread
 
-# --- إعدادات البوت الأساسية ---
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True 
@@ -13,31 +12,32 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 app = Flask(__name__)
 
-# --- إعدادات الاستضافة (Render) ---
 @app.route('/')
 def home(): return "Herminia Central Brain is Online"
 
 def run_flask():
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
 
-# --- دالة تشغيل المجالات (Cogs) ---
 async def load_extensions():
-    # هنا نضيف اسم أي ملف جديد ننشئه (بدون .py)
+    # تأكد أن الأسماء مطابقة لأسماء ملفاتك في GitHub
     extensions = ['destruction', 'general'] 
     for ext in extensions:
         try:
             await bot.load_extension(ext)
-            print(f"✅ تم تحميل: {ext}")
+            print(f"✅ [اللوحة] تم تحميل المجال: {ext}")
         except Exception as e:
-            print(f"❌ خطأ في تحميل {ext}: {e}")
+            print(f"❌ [اللوحة] فشل تحميل {ext}: {e}")
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print(f"🚀 العقل المركزي جاهز.. البوت متصل باسم: {bot.user}")
+    print(f"⏳ [اللوحة] جاري مزامنة أوامر السلاش...")
+    try:
+        synced = await bot.tree.sync()
+        print(f"✅ [اللوحة] تمت المزامنة! عدد الأوامر الشغالة: {len(synced)}")
+    except Exception as e:
+        print(f"❌ [اللوحة] فشل المزامنة: {e}")
+    print(f"🚀 [اللوحة] البوت جاهز باسم: {bot.user}")
 
-# --- تشغيل البوت ---
 async def main():
     Thread(target=run_flask).start()
     async with bot:
