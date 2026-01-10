@@ -12,7 +12,7 @@ def home():
     return render_template('index.html')
 
 def run():
-    # استخدام المتغير PORT الذي يفرضه ريندر تلقائياً
+    # هذا السطر هو السر: يقرأ البورت الذي يريده ريندر تلقائياً
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
 
