@@ -1,42 +1,18 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>Herminia Dashboard</title>
-    <style>
-        body { margin: 0; display: flex; font-family: 'Segoe UI', sans-serif; background: #0f0c29; color: white; height: 100vh; }
-        
-        /* القائمة الجانبية */
-        .sidebar { width: 280px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 20px; border-left: 1px solid rgba(255,255,255,0.1); overflow-y: auto; }
-        .sidebar h2 { font-size: 18px; border-bottom: 1px solid #7289da; padding-bottom: 10px; color: #7289da; }
-        .guild-card { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px; transition: 0.3s; }
-        .guild-card:hover { background: #7289da; }
-        .guild-card img { width: 35px; height: 35px; border-radius: 50%; margin-left: 12px; }
-        
-        /* المحتوى الرئيسي */
-        .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: radial-gradient(circle, #24243e, #0f0c29); }
-        .invite-btn { background: #7289da; color: white; padding: 15px 40px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 20px; transition: 0.4s; box-shadow: 0 4px 15px rgba(114, 137, 218, 0.4); }
-        .invite-btn:hover { transform: scale(1.1); background: #5b6eae; }
-    </style>
-</head>
-<body>
-
-    <div class="sidebar">
-        <h2>🌐 السيرفرات المتصلة</h2>
-        {% for guild in guilds %}
-        <div class="guild-card">
-            <img src="{{ guild.icon }}" alt="icon">
-            <span>{{ guild.name }}</span>
+<div class="main">
+    {% if not logged_in %}
+        <h1>مرحباً بك في Herminia</h1>
+        <p>يجب عليك تسجيل الدخول لرؤية سيرفراتك</p>
+        <a href="/login" class="invite-btn">🔑 تسجيل الدخول عبر ديسكورد</a>
+    {% else %}
+        <h2>اختر سيرفراً لإضافة البوت</h2>
+        <div class="guilds-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            {% for guild in guilds %}
+            <div class="guild-card">
+                <img src="https://cdn.discordapp.com/icons/{{guild.id}}/{{guild.icon}}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                <p>{{ guild.name }}</p>
+                <a href="https://discord.com/api/oauth2/authorize?client_id=1326462947265843241&permissions=8&scope=bot%20applications.commands&guild_id={{guild.id}}" class="invite-btn" style="padding: 5px 10px; font-size: 14px;">إضافة البوت</a>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-
-    <div class="main">
-        <h1>لوحة تحكم HERMINIA</h1>
-        <p>قم بدعوة البوت لتبدأ الإدارة والتحكم بسيرفرك</p>
-        <br>
-        <a href="https://discord.com/api/oauth2/authorize?client_id=1326462947265843241&permissions=8&scope=bot%20applications.commands" class="invite-btn">➕ دعوة البوت الآن</a>
-    </div>
-
-</body>
-</html>
+    {% endif %}
+</div>
