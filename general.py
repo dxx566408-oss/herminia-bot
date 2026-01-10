@@ -1,31 +1,36 @@
 import discord
 from discord.ext import commands
-import time
+from discord import app_commands # مكتبة أوامر السلاش
+
+class ProfileView(discord.ui.View): # كلاس خاص بالأزرار
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="صورة الحساب", style=discord.ButtonStyle.primary, emoji="🖼️")
+    async def avatar_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message(interaction.user.display_avatar.url, ephemeral=True)
+
+    @discord.ui.button(label="تاريخ الانضمام", style=discord.ButtonStyle.success, emoji="📅")
+    async def join_date_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        date = interaction.user.joined_at.strftime("%Y-%m-%d")
+        await interaction.response.send_message(f"لقد انضممت للسيرفر في: {date}", ephemeral=True)
 
 class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # أمر لمعرفة سرعة اتصال البوت (Ping)
-    @commands.command(name="بنق")
-    async def ping(self, ctx):
-        start_time = time.time()
-        message = await ctx.send("جاري الفحص... ⏳")
-        end_time = time.time()
+    # تعريف أمر السلاش /profile
+    @app_commands.command(name="profile", description="عرض ملفك الشخصي مع أزرار التحكم")
+    async def profile(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title=f"الملف الشخصي لـ {interaction.user.name}",
+            description="اختر أحد الأزرار أدناه للحصول على معلومات إضافية:",
+            color=discord.Color.random()
+        )
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
         
-        # حساب سرعة الاستجابة بالملي ثانية
-        ping_ms = round((end_time - start_time) * 1000)
-        await message.edit(content=f"🚀 سرعة الاستجابة: {ping_ms}ms\n📡 الحالة: متصل ومستقر")
-
-    # أمر لعرض معلومات السيرفر
-    @commands.command(name="سيرفر")
-    async def server_info(self, ctx):
-        guild = ctx.guild
-        embed = discord.Embed(title=f"معلومات {guild.name}", color=discord.Color.blue())
-        embed.add_field(name="عدد الأعضاء", value=guild.member_count, inline=True)
-        embed.add_field(name="صاحب السيرفر", value=guild.owner, inline=True)
-        embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
-        await ctx.send(embed=embed)
+        # إرسال الرسالة مع الأزرار
+        await interaction.response.send_message(embed=embed, view=ProfileView())
 
 async def setup(bot):
     await bot.add_cog(General(bot))
