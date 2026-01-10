@@ -1,5 +1,5 @@
 @app_commands.command(name="avatar", description="عرض صورة الحساب الخاصة بك أو لشخص آخر")
-    @app_commands.describe(user="اختر الشخص الذي تريد رؤية صورته")
+@app_commands.describe(user="اختر الشخص الذي تريد رؤية صورته")
     async def avatar(self, interaction: discord.Interaction, user: discord.Member = None):
         # تحديد الشخص المستهدف (صاحب الصورة)
         target = user or interaction.user
